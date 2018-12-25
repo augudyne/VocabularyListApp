@@ -1,5 +1,6 @@
 package com.projects.valerian.vocabularylist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -10,9 +11,12 @@ import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.projects.valerian.vocabularylist.dagger.ViewModelFactory
+import com.projects.valerian.vocabularylist.models.User
+import com.projects.valerian.vocabularylist.singletons.UserStore
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.AndroidInjection
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -23,8 +27,12 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
+    @Inject
+    internal lateinit var userStore: UserStore
 
     private lateinit var viewModel: WordsViewModel
+
+    private var fetchWordsDisposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,17 +52,34 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java)
 
-        viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java).apply {
-            getWordsForUser()
+        if (userStore.user == null) {
+            startActivityForResult(LoginActivity.createIntent(this.applicationContext), REQUEST_CODE_LOGIN)
+        } else {
+            fetchWordsDisposable =  viewModel.getWordsForUser()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe ({ response ->
+                        txt_landing.text = response.toString()
+                    }, { throwable ->
+                        txt_landing.text = throwable.message
+                    })
+            }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
+        REQUEST_CODE_LOGIN -> {
+            fetchWordsDisposable = viewModel.getWordsForUser()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe ({ response ->
+                .subscribe({ response ->
                     txt_landing.text = response.toString()
                 }, { throwable ->
                     txt_landing.text = throwable.message
                 })
         }
+        else -> super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onBackPressed() {
@@ -106,5 +131,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    companion object {
+        const val REQUEST_CODE_LOGIN = 1000
     }
 }
