@@ -1,5 +1,6 @@
 package com.projects.valerian.vocabularylist.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.projects.valerian.vocabularylist.apis.WordsApi
 import com.projects.valerian.vocabularylist.models.Word
@@ -12,8 +13,39 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
     @Inject
     internal lateinit var wordsApi: WordsApi
 
-    fun getWordsForUser(): Maybe<List<Word>> =
-        userStore.user?.let { user ->
-            wordsApi.getAllWords(user.bearerToken).toMaybe()
-        } ?: Maybe.empty<List<Word>>()
+    private var hasFetched: Boolean = false
+    private var words: MutableList<Word> = mutableListOf()
+        set(value) {
+            field.clear()
+            field.addAll(value)
+        }
+
+    /**
+     * Retrieve the words for the current user (handles not logged in)
+     * @param forceFetch force an API call
+     * @return Empty if no active user, otherwise will return a maybe of a list of words for the user
+     */
+    fun getWordsForUser(forceFetch: Boolean = false): Maybe<List<Word>> =
+        if (forceFetch) {
+            Log.d("WordsViewModel", "Forcing fetch...")
+            userStore.user?.let { user ->
+                Log.d(TAG, "User is defined, getting with words")
+                wordsApi.getAllWords(user.bearerToken)
+                    .toMaybe()
+                    .map { words = it.toMutableList(); it}
+            } ?: Maybe.empty<List<Word>>()
+        } else Maybe.just(words.toList())
+
+    fun getWordCountForUser(forceFetch: Boolean = false): Int = words.size
+
+    fun getWordAtPosition(position: Int): Word? = if (position < words.size) {
+        words[position]
+    } else {
+        Log.e(TAG, "No word at position $position in view model.")
+        null
+    }
+
+    companion object {
+        private const val TAG = "WordsViewModel"
+    }
 }

@@ -17,4 +17,9 @@
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email completions."</string>
+
+
+    <!-- Words -->
+    <string name="default_word_id">Undefined</string>
+    <string name="default_word_summary">No description available for undefined</string>
 </resources>
