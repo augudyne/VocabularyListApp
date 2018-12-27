@@ -64,7 +64,7 @@ class WordsSummaryFragment : Fragment() {
             )
 
         override fun getItemCount(): Int {
-            Log.d(TAG, "ItemCount: ${viewModel.getWordsForUser()}")
+            Log.d(TAG, "ItemCount: ${viewModel.getWordsForUser(context!!)}")
             return viewModel.getWordCountForUser()
         }
 
@@ -78,7 +78,7 @@ class WordsSummaryFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         rv_words.run {
-            (viewModel.getWordsForUser(true)
+            (viewModel.getWordsForUser(context, true)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({

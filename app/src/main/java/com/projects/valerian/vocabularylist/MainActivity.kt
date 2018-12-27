@@ -2,30 +2,21 @@ package com.projects.valerian.vocabularylist
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
-import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.projects.valerian.vocabularylist.dagger.ViewModelFactory
-import com.projects.valerian.vocabularylist.fragments.WordsSummaryFragment
-import com.projects.valerian.vocabularylist.models.User
-import com.projects.valerian.vocabularylist.models.Word
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.AndroidInjection
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.words_summary_fragment.*
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -37,21 +28,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var viewModel: WordsViewModel
 
     private var fetchWordsDisposable: Disposable? = null
-
-    private fun loadWords() {
-        fetchWordsDisposable = viewModel.getWordsForUser()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ response ->
-//                Log.d(TAG, "Substituting fragment...")
-//                val fragmentTransaction = supportFragmentManager.beginTransaction()
-//                fragmentTransaction.addToBackStack("")
-//                fragmentTransaction.replace(R.id.content_fragment, WordsSummaryFragment.newInstance())
-//                fragmentTransaction.commit()
-            }, { throwable ->
-                content_fragment.setTargetFragment(WordsSummaryFragment.newInstance(), 0)
-            })
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,16 +49,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         nav_view.setNavigationItemSelectedListener(this)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java)
 
-        if (userStore.user == null) {
+        if (userStore.getUser(this) == null) {
             startActivityForResult(LoginActivity.createIntent(this.applicationContext), REQUEST_CODE_LOGIN)
-        } else loadWords()
+        }
 
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
-        REQUEST_CODE_LOGIN -> {
-            loadWords()
-        }
+        REQUEST_CODE_LOGIN -> { }
         else -> super.onActivityResult(requestCode, resultCode, data)
     }
 

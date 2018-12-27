@@ -1,5 +1,6 @@
 package com.projects.valerian.vocabularylist.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.projects.valerian.vocabularylist.apis.WordsApi
@@ -25,10 +26,10 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
      * @param forceFetch force an API call
      * @return Empty if no active user, otherwise will return a maybe of a list of words for the user
      */
-    fun getWordsForUser(forceFetch: Boolean = false): Maybe<List<Word>> =
+    fun getWordsForUser(context: Context, forceFetch: Boolean = false): Maybe<List<Word>> =
         if (forceFetch) {
             Log.d("WordsViewModel", "Forcing fetch...")
-            userStore.user?.let { user ->
+            userStore.getUser(context)?.let { user ->
                 Log.d(TAG, "User is defined, getting with words")
                 wordsApi.getAllWords(user.bearerToken)
                     .toMaybe()

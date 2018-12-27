@@ -111,7 +111,7 @@ class LoginActivity : AppCompatActivity() {
                         Toast.makeText(this, response.error, Toast.LENGTH_LONG).show()
                         Log.d(this.localClassName, response.error)
                     } else {
-                        userStore.user = response.body
+                        userStore.setUser(response.body!!, this)
                         this.setResult(Activity.RESULT_OK)
                         this.finish()
                     }
