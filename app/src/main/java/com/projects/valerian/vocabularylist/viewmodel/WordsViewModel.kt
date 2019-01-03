@@ -4,9 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.projects.valerian.vocabularylist.apis.WordsApi
+import com.projects.valerian.vocabularylist.models.NoActiveUserException
 import com.projects.valerian.vocabularylist.models.Word
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import io.reactivex.Maybe
+import io.reactivex.Single
 import javax.inject.Inject
 
 class WordsViewModel @Inject() constructor(private val userStore: UserStore) : ViewModel() {
@@ -20,6 +22,19 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
             field.clear()
             field.addAll(value)
         }
+
+    /**
+     * Adds the given word to the currently logged in user
+     */
+    fun addWord(word: String, context: Context): Single<List<Word>> =
+        userStore.getUser(context)?.let { user ->
+            searchWord(word).flatMap { _ ->
+                wordsApi.addWord(word, user.bearerToken).map {
+                    words = it.toMutableList()
+                    it
+                }
+            }
+        } ?: Single.error<List<Word>>(NoActiveUserException())
 
     /**
      * Retrieve the words for the current user (handles not logged in)
@@ -45,6 +60,11 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
         Log.e(TAG, "No word at position $position in view model.")
         null
     }
+
+    /**
+     * Search for the given word with an API call, returning a Maybe for a word
+     */
+    private fun searchWord(word: String): Single<Word> = wordsApi.searchWord(word)
 
     companion object {
         private const val TAG = "WordsViewModel"

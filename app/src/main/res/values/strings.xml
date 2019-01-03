@@ -22,4 +22,10 @@
     <!-- Words -->
     <string name="default_word_id">Undefined</string>
     <string name="default_word_summary">No description available for undefined</string>
+
+    <string name="label_add_word">Type the word to add</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_add">Add</string>
+
+    <string name="error_word_required">A word is required</string>
 </resources>

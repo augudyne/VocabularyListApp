@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -11,6 +12,8 @@ import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.projects.valerian.vocabularylist.dagger.ViewModelFactory
+import com.projects.valerian.vocabularylist.fragments.AddWordDialogFragment
+import com.projects.valerian.vocabularylist.fragments.AddWordDialogFragment.Companion.RESULT_ERROR
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.AndroidInjection
@@ -19,7 +22,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, AddWordDialogFragment.OnAddWordInteractionListener {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     @Inject
@@ -29,16 +32,30 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private var fetchWordsDisposable: Disposable? = null
 
+    private fun handleAddWord(view: View) {
+        if (!userStore.isLoggedIn()) {
+            Snackbar.make(view, "Not logged in. Try restarting the application.", Snackbar.LENGTH_LONG).show()
+        } else {
+            val fragmentManager = supportFragmentManager
+            AddWordDialogFragment.newInstance().show(fragmentManager, ID_FRAGMENT_ADD_WORD)
+        }
+    }
+
+    override fun onFragmentInteraction(msg: String, result: Int) = when (result) {
+        RESULT_OK -> showSnackbar(msg)
+        RESULT_ERROR -> showSnackbar(msg)
+        else -> Unit
+    }
+
+    private fun showSnackbar(msg: String) = Snackbar.make(container, msg, Snackbar.LENGTH_LONG).show()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
+        fab.setOnClickListener { view -> handleAddWord(view) }
 
         val toggle = ActionBarDrawerToggle(
             this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
@@ -115,5 +132,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         const val REQUEST_CODE_LOGIN = 1000
 
         private const val TAG = "MainActivity"
+        private const val ID_FRAGMENT_ADD_WORD = "fragment_add_word"
     }
 }
