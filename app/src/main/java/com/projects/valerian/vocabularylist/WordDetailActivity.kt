@@ -7,8 +7,6 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.projects.valerian.vocabularylist.models.Word
 import kotlinx.android.synthetic.main.activity_word_detail.*
-import androidx.core.app.NavUtils
-
 
 
 class WordDetailActivity : AppCompatActivity() {

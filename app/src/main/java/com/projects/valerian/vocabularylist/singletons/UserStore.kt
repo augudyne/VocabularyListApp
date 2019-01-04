@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.projects.valerian.vocabularylist.models.User
+import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,7 +12,15 @@ import javax.inject.Singleton
 @Singleton
 class UserStore @Inject() constructor(){
 
+    val userSignedOut: PublishSubject<Boolean> = PublishSubject.create()
+
     private var user: User? = null
+    set(value) {
+        field = value
+        if (field == null) {
+            userSignedOut.onNext(true)
+        }
+    }
 
     fun isLoggedIn(): Boolean = user?.bearerExpiry?.isExpired() == false
 

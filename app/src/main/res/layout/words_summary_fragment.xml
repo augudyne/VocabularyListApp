@@ -4,9 +4,21 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".fragments.WordsSummaryFragment">
+        tools:context=".fragments.WordsSummaryFragment" android:id="@+id/container">
 
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:visibility="gone" android:id="@+id/lyt_empty_view"
+            android:layout_gravity="center">
+
+        <TextView
+                android:text="@string/label_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/lbl_empty_view" android:textAlignment="center"
+                android:layout_margin="16dp"/>
+    </FrameLayout>
     <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
-            android:layout_height="match_parent" android:id="@+id/rv_words" android:visibility="visible"/>
+            android:layout_height="match_parent" android:id="@+id/rv_words" android:visibility="visible">
+    </androidx.recyclerview.widget.RecyclerView>
 </FrameLayout>

@@ -20,6 +20,10 @@
 
 
     <!-- Words -->
+    <string name="label_empty">You have no words yet! Add some by pressing the + button.</string>
+
+    <string name="msg_deleted">Deleted</string>
+
     <string name="default_word_id">Undefined</string>
     <string name="default_word_summary">No description available for undefined</string>
 

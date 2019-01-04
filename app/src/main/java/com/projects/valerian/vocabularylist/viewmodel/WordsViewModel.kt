@@ -43,6 +43,19 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
         } ?: Single.error<List<Word>>(NoActiveUserException())
 
     /**
+     * Deletes the given word to the currently logged in user
+     */
+    fun deleteWord(word: String, context: Context): Single<List<Word>> =
+        userStore.getUser(context)?.let { user ->
+            searchWord(word)
+                .flatMap { wordsApi.deleteWord(word, user.bearerToken) }
+                .map {
+                    words = it.toMutableList()
+                    it
+                }
+        } ?: Single.error<List<Word>>(NoActiveUserException())
+
+    /**
      * Retrieve the words for the current user (handles not logged in)
      * @param forceFetch force an API call
      * @return Empty if no active user, otherwise will return a maybe of a list of words for the user

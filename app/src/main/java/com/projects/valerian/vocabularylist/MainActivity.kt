@@ -2,6 +2,7 @@ package com.projects.valerian.vocabularylist
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,7 +17,9 @@ import com.projects.valerian.vocabularylist.fragments.AddWordDialogFragment
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.AndroidInjection
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import javax.inject.Inject
@@ -30,6 +33,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var viewModel: WordsViewModel
 
     private var fetchWordsDisposable: Disposable? = null
+    private var userSignOutDisposable: Disposable? = null
 
     private fun handleAddWord(view: View) {
         if (!userStore.isLoggedIn()) {
@@ -72,6 +76,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java)
 
         promptLoginIfNoUser()
+
+        userSignOutDisposable = userStore.userSignedOut.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                if (it) promptLoginIfNoUser()
+            }, {
+                Log.e(TAG, it.localizedMessage)
+            })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
@@ -106,22 +118,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.nav_camera -> {
-                // Handle the camera action
-            }
-            R.id.nav_gallery -> {
-
-            }
-            R.id.nav_slideshow -> {
-
-            }
             R.id.nav_manage -> {
 
             }
             R.id.nav_share -> {
-
-            }
-            R.id.nav_send -> {
 
             }
         }
