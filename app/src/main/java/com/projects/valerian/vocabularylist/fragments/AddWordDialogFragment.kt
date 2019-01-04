@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.projects.valerian.vocabularylist.R
 import com.projects.valerian.vocabularylist.dagger.ViewModelFactory
+import com.projects.valerian.vocabularylist.setVisible
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -36,6 +37,8 @@ class AddWordDialogFragment : DialogFragment() {
 
     private var listener: OnAddWordInteractionListener? = null
 
+    private fun setLoading(isLoading: Boolean) = lyt_loading.setVisible(isLoading)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -49,10 +52,11 @@ class AddWordDialogFragment : DialogFragment() {
                 return@setOnClickListener
             }
             val searchId = txt_word.text.toString()
-            viewModel.addWord(searchId, btnView.context)
+            setLoading(true)
+            viewModel.addWord(searchId, activity!!.applicationContext)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ _ ->
+                .subscribe({ response ->
                     listener?.onFragmentInteraction("$searchId was added.", RESULT_OK)
                     dismiss()
                 }, { error ->

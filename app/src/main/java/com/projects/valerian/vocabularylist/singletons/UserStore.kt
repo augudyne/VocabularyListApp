@@ -13,7 +13,7 @@ class UserStore @Inject() constructor(){
 
     private var user: User? = null
 
-    fun isLoggedIn(): Boolean = user != null
+    fun isLoggedIn(): Boolean = user?.bearerExpiry?.isExpired() == false
 
     fun getUser(context: Context): User? {
         Log.d(TAG, "Fetching user from user store")
@@ -27,13 +27,22 @@ class UserStore @Inject() constructor(){
             Log.d(TAG, "No logged in user, shared preferences found: $user")
 
             user?.let {
-                if (it.bearerExpiry >= Calendar.getInstance().timeInMillis) {
+                if (!it.bearerExpiry.isExpired()) {
                     saveUser(it, context)
                 }
             }
+        } else if (user?.bearerExpiry?.isExpired() == true) {
+            this.user = null
         }
 
         return this.user
+    }
+
+    fun clearUser(context: Context) {
+        this.user = null
+        context.getSharedPreferences(USER_SHARED_PREFERENCES, Context.MODE_PRIVATE).edit().apply {
+            remove(SHARED_PREFERENCE_KEY_USER)
+        }.apply()
     }
 
     fun setUser(user: User, context: Context) {
@@ -52,6 +61,8 @@ class UserStore @Inject() constructor(){
             }.apply()
         }
     }
+
+    private fun Long.isExpired() = this <= Calendar.getInstance().timeInMillis
 
     companion object {
         const val USER_SHARED_PREFERENCES = "user_shared_preferences"

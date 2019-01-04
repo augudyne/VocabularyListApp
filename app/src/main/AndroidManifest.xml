@@ -33,6 +33,11 @@
                 android:name=".LoginActivity"
                 android:label="@string/title_activity_login">
         </activity>
+        <activity
+                android:name=".WordDetailActivity"
+                android:label="@string/title_activity_word_detail"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

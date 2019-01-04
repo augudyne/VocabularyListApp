@@ -13,7 +13,6 @@ import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.projects.valerian.vocabularylist.dagger.ViewModelFactory
 import com.projects.valerian.vocabularylist.fragments.AddWordDialogFragment
-import com.projects.valerian.vocabularylist.fragments.AddWordDialogFragment.Companion.RESULT_ERROR
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import com.projects.valerian.vocabularylist.viewmodel.WordsViewModel
 import dagger.android.AndroidInjection
@@ -41,13 +40,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    override fun onFragmentInteraction(msg: String, result: Int) = when (result) {
-        RESULT_OK -> showSnackbar(msg)
-        RESULT_ERROR -> showSnackbar(msg)
-        else -> Unit
+    private fun promptLoginIfNoUser() {
+        if (!userStore.isLoggedIn() && userStore.getUser(this) == null) {
+            startActivityForResult(LoginActivity.createIntent(this), REQUEST_CODE_LOGIN)
+        }
     }
 
     private fun showSnackbar(msg: String) = Snackbar.make(container, msg, Snackbar.LENGTH_LONG).show()
+
+    override fun onFragmentInteraction(msg: String, result: Int) = when (result) {
+        AddWordDialogFragment.RESULT_OK -> showSnackbar(msg)
+        AddWordDialogFragment.RESULT_ERROR -> showSnackbar(msg)
+        else -> Unit
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,10 +71,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         nav_view.setNavigationItemSelectedListener(this)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java)
 
-        if (userStore.getUser(this) == null) {
-            startActivityForResult(LoginActivity.createIntent(this.applicationContext), REQUEST_CODE_LOGIN)
-        }
-
+        promptLoginIfNoUser()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {

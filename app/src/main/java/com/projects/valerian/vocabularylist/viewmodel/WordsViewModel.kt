@@ -9,31 +9,37 @@ import com.projects.valerian.vocabularylist.models.Word
 import com.projects.valerian.vocabularylist.singletons.UserStore
 import io.reactivex.Maybe
 import io.reactivex.Single
+import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class WordsViewModel @Inject() constructor(private val userStore: UserStore) : ViewModel() {
 
     @Inject
     internal lateinit var wordsApi: WordsApi
 
-    private var hasFetched: Boolean = false
     private var words: MutableList<Word> = mutableListOf()
         set(value) {
             field.clear()
             field.addAll(value)
+            field.sortBy { it.id }
+            wordsSubject.onNext(field)
         }
+
+    val wordsSubject: PublishSubject<List<Word>> = PublishSubject.create()
 
     /**
      * Adds the given word to the currently logged in user
      */
     fun addWord(word: String, context: Context): Single<List<Word>> =
         userStore.getUser(context)?.let { user ->
-            searchWord(word).flatMap { _ ->
-                wordsApi.addWord(word, user.bearerToken).map {
+            searchWord(word)
+                .flatMap { wordsApi.addWord(word, user.bearerToken) }
+                .map {
                     words = it.toMutableList()
                     it
                 }
-            }
         } ?: Single.error<List<Word>>(NoActiveUserException())
 
     /**
@@ -49,7 +55,7 @@ class WordsViewModel @Inject() constructor(private val userStore: UserStore) : V
                 wordsApi.getAllWords(user.bearerToken)
                     .toMaybe()
                     .map { words = it.toMutableList(); it}
-            } ?: Maybe.empty<List<Word>>()
+            } ?: Maybe.just(words.toList())
         } else Maybe.just(words.toList())
 
     fun getWordCountForUser(forceFetch: Boolean = false): Int = words.size
