@@ -121,7 +121,7 @@ class WordsSummaryFragment : Fragment() {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe({
-                            Snackbar.make(if (it.isEmpty()) lyt_empty_view else container, R.string.msg_deleted, Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(if (it.isEmpty()) lyt_empty_view else rv_words, R.string.msg_deleted, Snackbar.LENGTH_LONG).show()
                         }, {
                             Log.d(TAG, it.localizedMessage)
                         })
