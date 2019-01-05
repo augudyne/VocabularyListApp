@@ -1,5 +1,6 @@
 package com.projects.valerian.vocabularylist.fragments
 
+import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchUIUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -81,11 +83,28 @@ class WordsSummaryFragment : Fragment() {
         ): Boolean = false
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) = (viewHolder as WordViewHolder).onDeleteHandler()
+
+
+        override fun onChildDraw(
+            c: Canvas,
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            dX: Float,
+            dY: Float,
+            actionState: Int,
+            isCurrentlyActive: Boolean
+        ) =
+            if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                getDefaultUIUtil().onDraw(c, recyclerView, viewHolder.itemView.lyt_overlay, dX, dY, actionState, isCurrentlyActive)
+            } else {
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
     }
 
     inner class WordViewHolder(itemView: View, private val onDeleteHandler: (String) -> Unit) : RecyclerView.ViewHolder(itemView) {
         private var word: Word? = null
         private fun reset() = itemView.run {
+            lyt_overlay.translationX = 0f
             txt_wordId.text = context.getString(R.string.default_word_id)
             txt_wordSummary.text = context.getString(R.string.default_word_summary)
         }

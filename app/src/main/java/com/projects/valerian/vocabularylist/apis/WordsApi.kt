@@ -2,10 +2,7 @@ package com.projects.valerian.vocabularylist.apis
 
 import com.projects.valerian.vocabularylist.models.Word
 import io.reactivex.Single
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface WordsApi {
     @GET("words")
@@ -14,9 +11,9 @@ interface WordsApi {
     @GET("words/{id}")
     fun searchWord(@Path("id") id: String): Single<Word>
 
-    @GET("words/add/{id}")
+    @PUT("words/{id}")
     fun addWord(@Path("id") id: String, @Header("X-Auth-Token") bearerToken: String): Single<List<Word>>
 
-    @DELETE("words/delete/{id}")
+    @DELETE("words/{id}")
     fun deleteWord(@Path("id") id: String, @Header("X-Auth-Token") bearerToken: String): Single<List<Word>>
 }
