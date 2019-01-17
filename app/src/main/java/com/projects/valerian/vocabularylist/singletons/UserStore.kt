@@ -3,7 +3,12 @@ package com.projects.valerian.vocabularylist.singletons
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.projects.valerian.vocabularylist.apis.WordsApi
 import com.projects.valerian.vocabularylist.models.User
+import io.reactivex.Maybe
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Inject
@@ -12,40 +17,31 @@ import javax.inject.Singleton
 @Singleton
 class UserStore @Inject() constructor(){
 
-    val userSignedOut: PublishSubject<Boolean> = PublishSubject.create()
+    @Inject
+    internal lateinit var wordsApi: WordsApi
+
+    val userStatusSubject: PublishSubject<UserState> = PublishSubject.create()
+
+    sealed class UserState {
+        class SignedIn(user: User): UserState()
+        object SignedOut: UserState()
+    }
+
+    private var wordsDisposable: Disposable? = null
 
     private var user: User? = null
     set(value) {
         field = value
-        if (field == null) {
-            userSignedOut.onNext(true)
+        if (value == null) {
+            userStatusSubject.onNext(UserState.SignedOut)
+        } else {
+            userStatusSubject.onNext(UserState.SignedIn(value))
         }
     }
 
-    fun isLoggedIn(): Boolean = user?.bearerExpiry?.isExpired() == false
+    fun isLoggedIn(context: Context) : Boolean = this.user != null || getUserFromSharedPrefs(context) != null
 
-    fun getUser(context: Context): User? {
-        Log.d(TAG, "Fetching user from user store")
-        if (user == null) {
-            val sharedPreferences = context.getSharedPreferences(USER_SHARED_PREFERENCES, Context.MODE_PRIVATE)
-
-            val user: User? = sharedPreferences.getString(SHARED_PREFERENCE_KEY_USER, null)?.let {
-                Gson().fromJson(it, User::class.java)
-            }
-
-            Log.d(TAG, "No logged in user, shared preferences found: $user")
-
-            user?.let {
-                if (!it.bearerExpiry.isExpired()) {
-                    saveUser(it, context)
-                }
-            }
-        } else if (user?.bearerExpiry?.isExpired() == true) {
-            this.user = null
-        }
-
-        return this.user
-    }
+    fun getUser(context: Context) = if (this.user != null) this.user else getUserFromSharedPrefs(context)
 
     fun clearUser(context: Context) {
         this.user = null
@@ -56,6 +52,24 @@ class UserStore @Inject() constructor(){
 
     fun setUser(user: User, context: Context) {
         saveUser(user, context)
+    }
+
+    private fun getUserFromSharedPrefs(context: Context): User? {
+        val sharedPreferences = context.getSharedPreferences(USER_SHARED_PREFERENCES, Context.MODE_PRIVATE)
+
+        val user: User? = sharedPreferences.getString(SHARED_PREFERENCE_KEY_USER, null)?.let {
+            Gson().fromJson(it, User::class.java)
+        }
+
+        Log.d(TAG, "No logged in user, shared preferences found: $user")
+
+        user?.let {
+            saveUser(it, context)
+        } ?: run {
+            this.user = null
+        }
+
+        return user
     }
 
     private fun saveUser(user: User, context: Context) {

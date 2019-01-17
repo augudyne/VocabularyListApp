@@ -37,7 +37,11 @@ class AddWordDialogFragment : DialogFragment() {
 
     private var listener: OnAddWordInteractionListener? = null
 
-    private fun setLoading(isLoading: Boolean) = lyt_loading.setVisible(isLoading)
+    private fun setLoading(isLoading: Boolean) {
+        lyt_loading.setVisible(isLoading)
+        btn_negative.isEnabled = !isLoading
+        btn_positive.isEnabled = !isLoading
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -63,6 +63,7 @@ class WordsSummaryFragment : Fragment() {
                 disposables.add(it)
             }
         }
+        viewModel.cacheWords(this@WordsSummaryFragment.context!!)
     }
 
     override fun onCreateView(

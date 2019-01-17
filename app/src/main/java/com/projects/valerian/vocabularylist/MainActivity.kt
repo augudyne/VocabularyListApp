@@ -36,7 +36,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var userSignOutDisposable: Disposable? = null
 
     private fun handleAddWord(view: View) {
-        if (!userStore.isLoggedIn()) {
+        if (!userStore.isLoggedIn(this)) {
+            promptLoginIfNoUser()
             Snackbar.make(view, "Not logged in. Try restarting the application.", Snackbar.LENGTH_LONG).show()
         } else {
             val fragmentManager = supportFragmentManager
@@ -45,7 +46,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun promptLoginIfNoUser() {
-        if (!userStore.isLoggedIn() && userStore.getUser(this) == null) {
+        if (!userStore.isLoggedIn(this)) {
             startActivityForResult(LoginActivity.createIntent(this), REQUEST_CODE_LOGIN)
         }
     }
@@ -75,15 +76,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         nav_view.setNavigationItemSelectedListener(this)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WordsViewModel::class.java)
 
-        promptLoginIfNoUser()
-
-        userSignOutDisposable = userStore.userSignedOut.subscribeOn(Schedulers.io())
+        userSignOutDisposable = userStore.userStatusSubject
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (it) promptLoginIfNoUser()
+                if (it is UserStore.UserState.SignedOut)
+                    startActivityForResult(LoginActivity.createIntent(this), REQUEST_CODE_LOGIN)
             }, {
                 Log.e(TAG, it.localizedMessage)
             })
+
+        userStore.getUser(this)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
